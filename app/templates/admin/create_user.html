@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Gérer les comptes{% endblock %}
+{% block page_title %}<i class="bi bi-people" style="color:var(--accent);margin-right:0.4rem;"></i> Gestion des comptes{% endblock %}
+
+{% block topbar_actions %}
+<span style="color:var(--text-muted);font-size:0.8rem;">{{ users|length }} compte(s)</span>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- Form -->
+    <div class="card-dark" style="position:sticky;top:5rem;">
+        <div class="section-title"><i class="bi bi-person-plus" style="color:var(--accent);"></i> Nouveau compte</div>
+
+        <form method="post" action="{{ url_for('admin.list_users') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Nom d'utilisateur *</label>
+                <input type="text" name="username" class="form-control-dark" placeholder="ex: jdupont" required>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                    <label class="form-label-dark">Prénom</label>
+                    <input type="text" name="first_name" class="form-control-dark" placeholder="Jean">
+                </div>
+                <div>
+                    <label class="form-label-dark">Nom</label>
+                    <input type="text" name="last_name" class="form-control-dark" placeholder="Dupont">
+                </div>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Mot de passe *</label>
+                <div style="position:relative;">
+                    <input type="password" name="password" id="newPwd" class="form-control-dark" placeholder="••••••••" required style="padding-right:2.5rem;">
+                    <button type="button" onclick="toggleNew()" style="position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;">
+                        <i class="bi bi-eye" id="newEye"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label class="form-label-dark">Rôle</label>
+                <select name="role" class="form-control-dark">
+                    <option value="admin">Administrateur</option>
+                    <option value="professor">Professeur</option>
+                    <option value="student" selected>Étudiant</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-accent" style="width:100%;justify-content:center;">
+                <i class="bi bi-plus-circle"></i> Créer le compte
+            </button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="card-dark">
+        <div class="section-title"><i class="bi bi-list-ul" style="color:var(--text-secondary);"></i> Comptes existants</div>
+
+        {% if users %}
+        <!-- Filter tabs -->
+        <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+            <button class="filter-btn active" onclick="filterTable('all', this)">Tous <span class="filter-count">{{ users|length }}</span></button>
+            <button class="filter-btn" onclick="filterTable('admin', this)">Admin</button>
+            <button class="filter-btn" onclick="filterTable('professor', this)">Profs</button>
+            <button class="filter-btn" onclick="filterTable('student', this)">Étudiants</button>
+        </div>
+
+        <table class="table-dark-custom" id="usersTable">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Prénom</th>
+                    <th>Nom</th>
+                    <th>Rôle</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+            <tr data-role="{{ u.role }}">
+                <td>
+                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                        <div class="avatar" style="width:28px;height:28px;font-size:0.72rem;border-radius:7px;">{{ u.username[0].upper() }}</div>
+                        <span style="font-weight:600;">{{ u.username }}</span>
+                    </div>
+                </td>
+                <td style="color:var(--text-secondary);">{{ u.first_name or '—' }}</td>
+                <td style="color:var(--text-secondary);">{{ u.last_name or '—' }}</td>
+                <td>
+                    <span class="badge-role badge-{{ u.role }}">
+                        <i class="bi bi-{{ 'shield' if u.role == 'admin' else ('person-workspace' if u.role == 'professor' else 'mortarboard') }}"></i>
+                        {{ u.role }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.edit_user', user_id=u.id) }}" class="btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem;">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <p>Aucun compte créé pour l'instant.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.filter-btn {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.filter-btn:hover { border-color: var(--border-accent); color: var(--text-primary); }
+.filter-btn.active { background: var(--accent-soft); border-color: var(--border-accent); color: var(--accent); }
+.filter-count {
+    background: var(--bg-hover);
+    padding: 0 0.4rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+</style>
+
+<script>
+function filterTable(role, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+        row.style.display = (role === 'all' || row.dataset.role === role) ? '' : 'none';
+    });
+}
+function toggleNew() {
+    const i = document.getElementById('newPwd');
+    const e = document.getElementById('newEye');
+    i.type = i.type === 'password' ? 'text' : 'password';
+    e.className = i.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Emploi du temps{% endblock %}
+{% block page_title %}<i class="bi bi-calendar3" style="color:var(--accent);margin-right:0.4rem;"></i> Emploi du temps{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- Create form -->
+    <div class="card-dark" style="position:sticky;top:5rem;">
+        <div class="section-title"><i class="bi bi-calendar-plus" style="color:var(--accent);"></i> Nouveau créneau</div>
+        <form method="post" action="{{ url_for('admin.create_schedule') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="create">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Classe *</label>
+                <select name="class_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner une classe</option>
+                    {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Matière / Titre *</label>
+                <input type="text" name="subject" class="form-control-dark" placeholder="ex: Sécurité réseau" required>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Jour *</label>
+                <select name="day_of_week" class="form-control-dark" required>
+                    <option value="" disabled selected>Choisir un jour</option>
+                    <option value="lundi">Lundi</option>
+                    <option value="mardi">Mardi</option>
+                    <option value="mercredi">Mercredi</option>
+                    <option value="jeudi">Jeudi</option>
+                    <option value="vendredi">Vendredi</option>
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;">
+                <div>
+                    <label class="form-label-dark">Heure début *</label>
+                    <input type="time" name="start_time" class="form-control-dark" required>
+                </div>
+                <div>
+                    <label class="form-label-dark">Heure fin *</label>
+                    <input type="time" name="end_time" class="form-control-dark" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-accent" style="width:100%;justify-content:center;">
+                <i class="bi bi-calendar-check"></i> Créer le créneau
+            </button>
+        </form>
+    </div>
+
+    <!-- List -->
+    <div class="card-dark">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;">
+            <div class="section-title" style="margin-bottom:0;flex:1;"><i class="bi bi-list-ul" style="color:var(--text-secondary);"></i> Créneaux existants</div>
+            <span style="color:var(--text-muted);font-size:0.78rem;">{{ schedules|length }} créneau(x)</span>
+        </div>
+
+        {% if schedules %}
+        <!-- Class filter -->
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <button class="filter-btn active" onclick="filterSched('all',this)">Toutes</button>
+            {% for c in classes %}
+            <button class="filter-btn" onclick="filterSched('{{ c.id }}',this)">{{ c.name }}</button>
+            {% endfor %}
+        </div>
+
+        <table class="table-dark-custom" id="schedTable">
+            <thead>
+                <tr><th>Matière</th><th>Classe</th><th>Jour</th><th>Horaire</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for s in schedules %}
+            <tr data-class="{{ s.class_id }}">
+                <td><span style="font-weight:600;">{{ s.title }}</span></td>
+                <td>
+                    <span style="background:var(--bg-hover);border:1px solid var(--border);padding:0.2rem 0.55rem;border-radius:6px;font-size:0.78rem;color:var(--text-secondary);">
+                        {{ s.class_name }}
+                    </span>
+                </td>
+                <td style="text-transform:capitalize;color:var(--text-secondary);font-size:0.85rem;">{{ s.day_of_week }}</td>
+                <td style="font-size:0.83rem;color:var(--text-secondary);">
+                    <i class="bi bi-clock" style="color:var(--accent);margin-right:0.25rem;"></i>
+                    {{ s.start_str }} – {{ s.end_str }}
+                </td>
+                <td>
+                    <div style="display:flex;gap:0.4rem;">
+                        <button onclick="openEdit({{ s.id }},'{{ s.title|e }}','{{ s.class_id }}','{{ s.day_of_week }}','{{ s.start_str }}','{{ s.end_str }}')"
+                                class="btn-ghost" style="font-size:0.75rem;padding:0.3rem 0.6rem;">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button onclick="confirmDel({{ s.id }},'{{ s.title|e }}')"
+                                class="btn-danger-soft" style="font-size:0.75rem;padding:0.3rem 0.6rem;">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun créneau créé.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Edit modal -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:var(--radius);padding:2rem;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+            <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:0.5rem;">
+                <i class="bi bi-pencil-square" style="color:var(--accent);"></i> Modifier le créneau
+            </h3>
+            <button onclick="closeEdit()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="post" action="{{ url_for('admin.create_schedule') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="schedule_id" id="eId">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Matière / Titre *</label>
+                <input type="text" name="subject" id="eSubject" class="form-control-dark" required>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Classe *</label>
+                <select name="class_id" id="eClass" class="form-control-dark" required>
+                    {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Jour *</label>
+                <select name="day_of_week" id="eDay" class="form-control-dark" required>
+                    <option value="lundi">Lundi</option>
+                    <option value="mardi">Mardi</option>
+                    <option value="mercredi">Mercredi</option>
+                    <option value="jeudi">Jeudi</option>
+                    <option value="vendredi">Vendredi</option>
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;">
+                <div>
+                    <label class="form-label-dark">Heure début *</label>
+                    <input type="time" name="start_time" id="eStart" class="form-control-dark" required>
+                </div>
+                <div>
+                    <label class="form-label-dark">Heure fin *</label>
+                    <input type="time" name="end_time" id="eEnd" class="form-control-dark" required>
+                </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;">
+                <button type="submit" class="btn-accent" style="flex:1;justify-content:center;"><i class="bi bi-check-circle"></i> Enregistrer</button>
+                <button type="button" onclick="closeEdit()" class="btn-ghost" style="flex:1;justify-content:center;">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete modal -->
+<div id="delModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="width:52px;height:52px;background:rgba(255,95,126,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.4rem;color:var(--danger);">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.4rem;">Supprimer ce créneau ?</h3>
+        <p style="color:var(--text-muted);font-size:0.83rem;margin-bottom:1.5rem;">
+            <strong id="delName" style="color:var(--text-primary);"></strong> sera définitivement supprimé.
+        </p>
+        <div style="display:flex;gap:0.75rem;">
+            <form method="post" action="{{ url_for('admin.create_schedule') }}" style="flex:1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="schedule_id" id="delId">
+                <button type="submit" class="btn-danger-soft" style="width:100%;justify-content:center;padding:0.6rem;">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
+            </form>
+            <button onclick="closeDel()" class="btn-ghost" style="flex:1;justify-content:center;padding:0.6rem;">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.filter-btn{background:var(--bg-primary);border:1px solid var(--border);color:var(--text-secondary);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:500;cursor:pointer;transition:all .15s;}
+.filter-btn:hover{border-color:var(--border-accent);color:var(--text-primary);}
+.filter-btn.active{background:var(--accent-soft);border-color:var(--border-accent);color:var(--accent);}
+</style>
+
+<script>
+function filterSched(cid, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#schedTable tbody tr').forEach(r=>{
+        r.style.display = (cid==='all' || r.dataset.class===cid) ? '' : 'none';
+    });
+}
+function openEdit(id, title, classId, day, start, end) {
+    document.getElementById('eId').value      = id;
+    document.getElementById('eSubject').value = title;
+    document.getElementById('eDay').value     = day;
+    document.getElementById('eStart').value   = start.slice(0,5);
+    document.getElementById('eEnd').value     = end.slice(0,5);
+    for(let o of document.getElementById('eClass').options) o.selected = (o.value===String(classId));
+    document.getElementById('editModal').style.display='flex';
+}
+function closeEdit(){ document.getElementById('editModal').style.display='none'; }
+function confirmDel(id, title){
+    document.getElementById('delId').value   = id;
+    document.getElementById('delName').textContent = title;
+    document.getElementById('delModal').style.display='flex';
+}
+function closeDel(){ document.getElementById('delModal').style.display='none'; }
+['editModal','delModal'].forEach(id=>{
+    document.getElementById(id).addEventListener('click',function(e){ if(e.target===this) this.style.display='none'; });
+});
+</script>
+{% endblock %}

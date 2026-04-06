@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Affecter un professeur{% endblock %}
+{% block page_title %}<i class="bi bi-person-workspace" style="color:var(--accent);margin-right:0.4rem;"></i> Affecter un professeur{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.dashboard') }}" class="btn-ghost">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div style="display:grid;grid-template-columns:1fr 1.6fr;gap:1.5rem;align-items:start;">
+
+    <!-- Formulaire -->
+    <div class="card-dark">
+        <div class="section-title">
+            <i class="bi bi-plus-circle" style="color:var(--accent);"></i> Nouvelle affectation
+        </div>
+
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Classe</label>
+                <select name="class_id" class="form-control-dark" required>
+                    <option value="">-- Choisir une classe --</option>
+                    {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom:1.5rem;">
+                <label class="form-label-dark">Professeur</label>
+                <select name="professor_id" class="form-control-dark" required>
+                    <option value="">-- Choisir un professeur --</option>
+                    {% for p in professors %}
+                        <option value="{{ p.id }}">
+                            {{ p.username }}{% if p.first_name %} — {{ p.first_name }} {{ p.last_name }}{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn-accent" style="width:100%;">
+                <i class="bi bi-check-lg"></i> Affecter
+            </button>
+        </form>
+    </div>
+
+    <!-- Table des affectations -->
+    <div class="card-dark">
+        <div class="section-title">
+            <i class="bi bi-list-check" style="color:var(--success);"></i> Affectations actuelles
+        </div>
+
+        {% if assignments %}
+        <table class="table-dark-custom">
+            <thead>
+                <tr>
+                    <th>Classe</th>
+                    <th>Professeur</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for a in assignments %}
+            <tr>
+                <td>
+                    <span style="background:var(--bg-hover);border:1px solid var(--border);padding:0.2rem 0.6rem;border-radius:6px;font-size:0.8rem;">
+                        <i class="bi bi-collection" style="margin-right:0.3rem;color:var(--danger);"></i>{{ a.class_name }}
+                    </span>
+                </td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                        <div style="width:28px;height:28px;border-radius:7px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:0.75rem;font-weight:700;">
+                            {{ a.username[0].upper() }}
+                        </div>
+                        <div>
+                            <div style="font-weight:600;font-size:0.88rem;">{{ a.username }}</div>
+                            {% if a.first_name %}
+                            <div style="font-size:0.75rem;color:var(--text-muted);">{{ a.first_name }} {{ a.last_name }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <form method="post" action="{{ url_for('admin.unassign_professor') }}" style="display:inline;">
+                        <input type="hidden" name="class_id" value="{{ a.class_id }}">
+                        <input type="hidden" name="professor_id" value="{{ a.professor_id }}">
+                        <button type="submit" class="btn-danger-soft"
+                            onclick="return confirm('Retirer {{ a.username }} de {{ a.class_name }} ?')">
+                            <i class="bi bi-trash3"></i> Retirer
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-person-x"></i>
+            <p>Aucune affectation pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

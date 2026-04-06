@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block page_title %}<i class="bi bi-grid-1x2" style="color:var(--accent);margin-right:0.4rem;"></i> Dashboard{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.list_users') }}" class="btn-accent">
+    <i class="bi bi-person-plus"></i> Nouvel utilisateur
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="bi bi-people-fill"></i></div>
+        <div>
+            <div class="stat-value">{{ (profs|length) + (etudiants|length) }}</div>
+            <div class="stat-label">Utilisateurs total</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="bi bi-person-workspace"></i></div>
+        <div>
+            <div class="stat-value">{{ profs|length }}</div>
+            <div class="stat-label">Professeurs</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber"><i class="bi bi-mortarboard-fill"></i></div>
+        <div>
+            <div class="stat-value">{{ etudiants|length }}</div>
+            <div class="stat-label">Étudiants</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="bi bi-collection-fill"></i></div>
+        <div>
+            <div class="stat-value">{{ classes|length }}</div>
+            <div class="stat-label">Classes</div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:2rem;">
+    <a href="{{ url_for('admin.list_users') }}" class="btn-ghost">
+        <i class="bi bi-person-gear"></i> Gérer les comptes
+    </a>
+    <a href="{{ url_for('admin.list_classes') }}" class="btn-ghost">
+        <i class="bi bi-collection"></i> Gérer les classes
+    </a>
+    <a href="{{ url_for('admin.enroll_student') }}" class="btn-ghost">
+        <i class="bi bi-person-check"></i> Affecter un étudiant
+    </a>
+    <a href="{{ url_for('admin.assign_professor') }}" class="btn-ghost">
+        <i class="bi bi-person-workspace"></i> Affecter un professeur
+    </a>
+    <a href="{{ url_for('admin.create_schedule') }}" class="btn-ghost">
+        <i class="bi bi-calendar-plus"></i> Créer un créneau
+    </a>
+</div>
+
+<!-- Two columns -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+
+    <!-- Professors -->
+    <div class="card-dark">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="section-title" style="margin-bottom:0;"><i class="bi bi-person-workspace" style="color:var(--success);"></i> Professeurs</div>
+            <a href="{{ url_for('admin.assign_professor') }}" class="btn-ghost" style="font-size:0.8rem;">
+                <i class="bi bi-plus"></i> Affecter
+            </a>
+        </div>
+        {% if profs %}
+        <table class="table-dark-custom">
+            <thead><tr><th>Utilisateur</th><th>Prénom</th><th>Nom</th><th>Action</th></tr></thead>
+            <tbody>
+            {% for p in profs %}
+            <tr>
+                <td><span style="font-weight:600;">{{ p.username }}</span></td>
+                <td style="color:var(--text-secondary);">{{ p.first_name or '—' }}</td>
+                <td style="color:var(--text-secondary);">{{ p.last_name or '—' }}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_user', user_id=p.id) }}" class="btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem;">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><i class="bi bi-person-x"></i>Aucun professeur</div>
+        {% endif %}
+    </div>
+
+    <!-- Classes -->
+    <div class="card-dark">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="section-title" style="margin-bottom:0;"><i class="bi bi-collection" style="color:var(--danger);"></i> Classes</div>
+            <a href="{{ url_for('admin.list_classes') }}" class="btn-ghost" style="font-size:0.8rem;">
+                <i class="bi bi-plus"></i> Ajouter
+            </a>
+        </div>
+        {% if classes %}
+        <table class="table-dark-custom">
+            <thead><tr><th>Nom</th><th>Créée le</th></tr></thead>
+            <tbody>
+            {% for c in classes %}
+            <tr>
+                <td><span style="font-weight:600;">{{ c.name }}</span></td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ c.created_at.strftime('%d/%m/%Y') if c.created_at else '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><i class="bi bi-collection"></i>Aucune classe</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Students -->
+<div class="card-dark">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="section-title" style="margin-bottom:0;flex:1;"><i class="bi bi-mortarboard" style="color:var(--warning);"></i> Étudiants</div>
+        <a href="{{ url_for('admin.enroll_student') }}" class="btn-ghost" style="font-size:0.8rem;margin-right:0.5rem;">
+            <i class="bi bi-person-check"></i> Affecter
+        </a>
+        <a href="{{ url_for('admin.list_users') }}" class="btn-ghost" style="font-size:0.8rem;">
+            <i class="bi bi-plus"></i> Ajouter
+        </a>
+    </div>
+    {% if etudiants %}
+    <table class="table-dark-custom">
+        <thead><tr><th>Utilisateur</th><th>Prénom</th><th>Nom</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for e in etudiants %}
+        <tr>
+            <td><span style="font-weight:600;">{{ e.username }}</span></td>
+            <td style="color:var(--text-secondary);">{{ e.first_name or '—' }}</td>
+            <td style="color:var(--text-secondary);">{{ e.last_name or '—' }}</td>
+            <td>
+                <a href="{{ url_for('admin.edit_user', user_id=e.id) }}" class="btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.7rem;">
+                    <i class="bi bi-pencil"></i> Modifier
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><i class="bi bi-mortarboard"></i>Aucun étudiant</div>
+    {% endif %}
+</div>
+
+{% endblock %}

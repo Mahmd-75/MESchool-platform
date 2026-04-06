@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Modifier — {{ user.username }}{% endblock %}
+{% block page_title %}<i class="bi bi-pencil-square" style="color:var(--accent);margin-right:0.4rem;"></i> Modifier le compte{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;">
+    <div class="card-dark">
+        <!-- User header -->
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);">
+            <div class="avatar" style="width:48px;height:48px;font-size:1.2rem;border-radius:12px;">{{ user.username[0].upper() }}</div>
+            <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">{{ user.username }}</div>
+                <span class="badge-role badge-{{ user.role }}" style="margin-top:0.25rem;">{{ user.role }}</span>
+            </div>
+        </div>
+
+        <form method="post" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Nom d'utilisateur *</label>
+                <input type="text" name="username" class="form-control-dark" value="{{ user.username }}" required>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                    <label class="form-label-dark">Prénom</label>
+                    <input type="text" name="first_name" class="form-control-dark" value="{{ user.first_name or '' }}">
+                </div>
+                <div>
+                    <label class="form-label-dark">Nom</label>
+                    <input type="text" name="last_name" class="form-control-dark" value="{{ user.last_name or '' }}">
+                </div>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Rôle</label>
+                <select name="role" class="form-control-dark">
+                    <option value="admin"     {% if user.role == 'admin'     %}selected{% endif %}>Administrateur</option>
+                    <option value="professor" {% if user.role == 'professor' %}selected{% endif %}>Professeur</option>
+                    <option value="student"   {% if user.role == 'student'   %}selected{% endif %}>Étudiant</option>
+                </select>
+            </div>
+            <div style="margin-bottom:1.75rem;">
+                <label class="form-label-dark">Nouveau mot de passe <span style="color:var(--text-muted);text-transform:none;font-weight:400;">(laisser vide pour conserver)</span></label>
+                <div style="position:relative;">
+                    <input type="password" name="password" id="editPwd" class="form-control-dark" placeholder="••••••••" style="padding-right:2.5rem;">
+                    <button type="button" onclick="toggleEdit()" style="position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;">
+                        <i class="bi bi-eye" id="editEye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:0.75rem;">
+                <button type="submit" class="btn-accent" style="flex:1;justify-content:center;">
+                    <i class="bi bi-check-circle"></i> Enregistrer
+                </button>
+                <a href="{{ url_for('admin.list_users') }}" class="btn-ghost" style="flex:1;justify-content:center;">
+                    <i class="bi bi-x"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleEdit() {
+    const i = document.getElementById('editPwd');
+    const e = document.getElementById('editEye');
+    i.type = i.type === 'password' ? 'text' : 'password';
+    e.className = i.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+</script>
+{% endblock %}

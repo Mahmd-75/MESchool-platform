@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Créer une évaluation{% endblock %}
+{% block page_title %}<i class="bi bi-clipboard-plus" style="color:var(--accent);margin-right:0.4rem;"></i> Créer une évaluation{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;">
+    <div class="card-dark">
+        <div class="section-title"><i class="bi bi-clipboard-plus" style="color:var(--accent);"></i> Nouvelle évaluation</div>
+
+        <form method="post" action="{{ url_for('professor.create_evaluation') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Nom de l'évaluation *</label>
+                <input type="text" name="name" class="form-control-dark" placeholder="ex: Examen Final, TP Réseau..." required>
+            </div>
+            <div style="margin-bottom:1.75rem;">
+                <label class="form-label-dark">Classe *</label>
+                <select name="class_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner une classe</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display:flex;gap:0.75rem;">
+                <button type="submit" class="btn-accent" style="flex:1;justify-content:center;">
+                    <i class="bi bi-check-circle"></i> Créer
+                </button>
+                <a href="{{ url_for('professor.dashboard') }}" class="btn-ghost" style="flex:1;justify-content:center;">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

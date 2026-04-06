@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Classes{% endblock %}
+{% block page_title %}<i class="bi bi-collection" style="color:var(--accent);margin-right:0.4rem;"></i> Gestion des classes{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- Create form -->
+    <div class="card-dark" style="position:sticky;top:5rem;">
+        <div class="section-title"><i class="bi bi-plus-circle" style="color:var(--accent);"></i> Nouvelle classe</div>
+        <form method="post" action="{{ url_for('admin.list_classes') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="create">
+            <div style="margin-bottom:1.25rem;">
+                <label class="form-label-dark">Nom de la classe *</label>
+                <input type="text" name="name" class="form-control-dark" placeholder="ex: GCS2-A" required>
+            </div>
+            <button type="submit" class="btn-accent" style="width:100%;justify-content:center;">
+                <i class="bi bi-plus-circle"></i> Créer la classe
+            </button>
+        </form>
+    </div>
+
+    <!-- Classes list -->
+    <div class="card-dark">
+        <div class="section-title"><i class="bi bi-collection" style="color:var(--text-secondary);"></i> Classes existantes</div>
+
+        {% if classes %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;">
+            {% for c in classes %}
+            <div class="class-card" style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.1rem 1.1rem 0.85rem;transition:border-color 0.2s;position:relative;">
+
+                <!-- Name display mode -->
+                <div id="view-{{ c.id }}">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+                        <i class="bi bi-collection-fill" style="color:var(--accent);font-size:0.95rem;"></i>
+                        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;" id="name-{{ c.id }}">{{ c.name }}</span>
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.7rem;margin-bottom:0.85rem;">
+                        {% if c.created_at %}{{ c.created_at.strftime('%d/%m/%Y') }}{% else %}—{% endif %}
+                    </div>
+                    <div style="display:flex;gap:0.4rem;">
+                        <button onclick="startEdit({{ c.id }}, '{{ c.name }}')" class="btn-ghost" style="flex:1;justify-content:center;font-size:0.75rem;padding:0.3rem 0.5rem;">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </button>
+                        <button onclick="confirmDelete({{ c.id }}, '{{ c.name }}')" class="btn-danger-soft" style="flex:1;justify-content:center;font-size:0.75rem;padding:0.3rem 0.5rem;">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Edit mode (hidden by default) -->
+                <div id="edit-{{ c.id }}" style="display:none;">
+                    <form method="post" action="{{ url_for('admin.list_classes') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="class_id" value="{{ c.id }}">
+                        <input type="text" name="name" id="input-{{ c.id }}" class="form-control-dark" style="margin-bottom:0.6rem;font-size:0.85rem;" required>
+                        <div style="display:flex;gap:0.4rem;">
+                            <button type="submit" class="btn-accent" style="flex:1;justify-content:center;font-size:0.75rem;padding:0.3rem 0.5rem;">
+                                <i class="bi bi-check"></i> OK
+                            </button>
+                            <button type="button" onclick="cancelEdit({{ c.id }})" class="btn-ghost" style="flex:1;justify-content:center;font-size:0.75rem;padding:0.3rem 0.5rem;">
+                                <i class="bi bi-x"></i> Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-collection"></i>
+            <p>Aucune classe créée.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+            <div style="width:52px;height:52px;background:rgba(255,95,126,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.4rem;color:var(--danger);">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.4rem;">Supprimer la classe ?</h3>
+            <p style="color:var(--text-muted);font-size:0.83rem;">
+                La classe <strong id="deleteClassName" style="color:var(--text-primary);"></strong> sera définitivement supprimée ainsi que tous ses créneaux et inscriptions associés.
+            </p>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+            <form method="post" action="{{ url_for('admin.list_classes') }}" style="flex:1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="class_id" id="deleteClassId">
+                <button type="submit" class="btn-danger-soft" style="width:100%;justify-content:center;padding:0.6rem;">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
+            </form>
+            <button onclick="closeModal()" class="btn-ghost" style="flex:1;justify-content:center;padding:0.6rem;">
+                Annuler
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function startEdit(id, currentName) {
+    document.getElementById('view-' + id).style.display = 'none';
+    document.getElementById('edit-' + id).style.display = 'block';
+    document.getElementById('input-' + id).value = currentName;
+    document.getElementById('input-' + id).focus();
+}
+
+function cancelEdit(id) {
+    document.getElementById('edit-' + id).style.display = 'none';
+    document.getElementById('view-' + id).style.display = 'block';
+}
+
+function confirmDelete(id, name) {
+    document.getElementById('deleteClassId').value = id;
+    document.getElementById('deleteClassName').textContent = name;
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Close modal on backdrop click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Inscriptions{% endblock %}
+{% block page_title %}<i class="bi bi-person-plus" style="color:var(--accent);margin-right:0.4rem;"></i> Inscriptions{% endblock %}
+
+{% block content %}
+
+<!-- Two tabs -->
+<div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">
+    <button class="tab-btn active" onclick="switchTab('students', this)">
+        <i class="bi bi-mortarboard"></i> Étudiants
+    </button>
+    <button class="tab-btn" onclick="switchTab('profs', this)">
+        <i class="bi bi-person-workspace"></i> Professeurs
+    </button>
+</div>
+
+<!-- ══════════ STUDENTS TAB ══════════ -->
+<div id="tab-students">
+<div style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- Assign form -->
+    <div class="card-dark" style="position:sticky;top:5rem;">
+        <div class="section-title"><i class="bi bi-person-plus" style="color:var(--accent);"></i> Inscrire un étudiant</div>
+        <form method="post" action="{{ url_for('admin.enroll_student') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add_student">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Classe *</label>
+                <select name="class_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner une classe</option>
+                    {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label class="form-label-dark">Étudiant *</label>
+                <select name="student_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner un étudiant</option>
+                    {% for s in students %}
+                    <option value="{{ s.id }}">{{ s.username }}{% if s.first_name %} — {{ s.first_name }} {{ s.last_name }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-accent" style="width:100%;justify-content:center;">
+                <i class="bi bi-check-circle"></i> Inscrire
+            </button>
+        </form>
+    </div>
+
+    <!-- Students list per class -->
+    <div class="card-dark">
+        <div class="section-title"><i class="bi bi-list-ul" style="color:var(--text-secondary);"></i> Étudiants par classe</div>
+        {% if classes %}
+        {% for c in classes %}
+            {% set class_students = enrollments_students | selectattr('class_id', 'equalto', c.id) | list %}
+            <div style="margin-bottom:1.25rem;">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+                    <i class="bi bi-collection-fill" style="color:var(--accent);font-size:0.85rem;"></i>
+                    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;">{{ c.name }}</span>
+                    <span style="color:var(--text-muted);font-size:0.75rem;">({{ class_students|length }} étudiant(s))</span>
+                </div>
+                {% if class_students %}
+                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;padding-left:1.2rem;">
+                    {% for e in class_students %}
+                    <div style="display:flex;align-items:center;gap:0.4rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:20px;padding:0.25rem 0.6rem 0.25rem 0.4rem;font-size:0.78rem;">
+                        <div class="avatar" style="width:20px;height:20px;font-size:0.6rem;border-radius:5px;">{{ e.username[0].upper() }}</div>
+                        {{ e.username }}
+                        <form method="post" action="{{ url_for('admin.enroll_student') }}" style="display:inline;margin:0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="remove_student">
+                            <input type="hidden" name="class_id" value="{{ c.id }}">
+                            <input type="hidden" name="student_id" value="{{ e.student_id }}">
+                            <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0;line-height:1;font-size:0.75rem;" title="Retirer" onclick="return confirm('Retirer {{ e.username }} de {{ c.name }} ?')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color:var(--text-muted);font-size:0.78rem;padding-left:1.2rem;">Aucun étudiant inscrit.</p>
+                {% endif %}
+            </div>
+            {% if not loop.last %}<hr style="border-color:var(--border);margin:0.75rem 0;">{% endif %}
+        {% endfor %}
+        {% else %}
+        <div class="empty-state"><i class="bi bi-collection"></i><p>Aucune classe créée.</p></div>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<!-- ══════════ PROFESSORS TAB ══════════ -->
+<div id="tab-profs" style="display:none;">
+<div style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- Assign form -->
+    <div class="card-dark" style="position:sticky;top:5rem;">
+        <div class="section-title"><i class="bi bi-person-workspace" style="color:var(--success);"></i> Assigner un professeur</div>
+        <form method="post" action="{{ url_for('admin.enroll_student') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add_professor">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Classe *</label>
+                <select name="class_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner une classe</option>
+                    {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label class="form-label-dark">Professeur *</label>
+                <select name="professor_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner un professeur</option>
+                    {% for p in professors %}
+                    <option value="{{ p.id }}">{{ p.username }}{% if p.first_name %} — {{ p.first_name }} {{ p.last_name }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-accent" style="width:100%;justify-content:center;background:var(--success);">
+                <i class="bi bi-check-circle"></i> Assigner
+            </button>
+        </form>
+    </div>
+
+    <!-- Profs list per class -->
+    <div class="card-dark">
+        <div class="section-title"><i class="bi bi-list-ul" style="color:var(--text-secondary);"></i> Professeurs par classe</div>
+        {% if classes %}
+        {% for c in classes %}
+            {% set class_profs = enrollments_profs | selectattr('class_id', 'equalto', c.id) | list %}
+            <div style="margin-bottom:1.25rem;">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+                    <i class="bi bi-collection-fill" style="color:var(--accent);font-size:0.85rem;"></i>
+                    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;">{{ c.name }}</span>
+                    <span style="color:var(--text-muted);font-size:0.75rem;">({{ class_profs|length }} prof(s))</span>
+                </div>
+                {% if class_profs %}
+                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;padding-left:1.2rem;">
+                    {% for p in class_profs %}
+                    <div style="display:flex;align-items:center;gap:0.4rem;background:var(--bg-primary);border:1px solid rgba(34,211,165,0.2);border-radius:20px;padding:0.25rem 0.6rem 0.25rem 0.4rem;font-size:0.78rem;color:var(--success);">
+                        <div class="avatar" style="width:20px;height:20px;font-size:0.6rem;border-radius:5px;background:var(--success);">{{ p.username[0].upper() }}</div>
+                        {{ p.username }}
+                        <form method="post" action="{{ url_for('admin.enroll_student') }}" style="display:inline;margin:0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="remove_professor">
+                            <input type="hidden" name="class_id" value="{{ c.id }}">
+                            <input type="hidden" name="professor_id" value="{{ p.professor_id }}">
+                            <button type="submit" style="background:none;border:none;color:var(--success);cursor:pointer;padding:0;line-height:1;font-size:0.75rem;opacity:0.6;" title="Retirer" onclick="return confirm('Retirer {{ p.username }} de {{ c.name }} ?')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color:var(--text-muted);font-size:0.78rem;padding-left:1.2rem;">Aucun professeur assigné.</p>
+                {% endif %}
+            </div>
+            {% if not loop.last %}<hr style="border-color:var(--border);margin:0.75rem 0;">{% endif %}
+        {% endfor %}
+        {% else %}
+        <div class="empty-state"><i class="bi bi-collection"></i><p>Aucune classe créée.</p></div>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<style>
+.tab-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.5rem 1.1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.tab-btn:hover { border-color: var(--border-accent); color: var(--text-primary); }
+.tab-btn.active { background: var(--accent-soft); border-color: var(--border-accent); color: var(--accent); }
+</style>
+
+<script>
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-students').style.display = tab === 'students' ? 'block' : 'none';
+    document.getElementById('tab-profs').style.display    = tab === 'profs'    ? 'block' : 'none';
+}
+</script>
+{% endblock %}

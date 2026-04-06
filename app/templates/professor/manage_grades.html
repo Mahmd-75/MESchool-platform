@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Notes — {{ evaluation.name }}{% endblock %}
+{% block page_title %}<i class="bi bi-pencil-square" style="color:var(--accent);margin-right:0.4rem;"></i> Gestion des notes{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start;">
+
+    <!-- Form -->
+    <div class="card-dark" style="position:sticky;top:5rem;">
+        <!-- Evaluation header -->
+        <div style="background:var(--accent-soft);border:1px solid var(--border-accent);border-radius:var(--radius-sm);padding:0.9rem 1rem;margin-bottom:1.5rem;">
+            <div style="font-size:0.7rem;color:var(--accent);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.2rem;">Évaluation</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">{{ evaluation.name }}</div>
+        </div>
+
+        <div class="section-title"><i class="bi bi-plus-circle" style="color:var(--accent);"></i> Ajouter une note</div>
+
+        <form method="post" action="{{ url_for('professor.manage_grades', evaluation_id=evaluation.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="evaluation_id" value="{{ evaluation.id }}">
+            <div style="margin-bottom:1rem;">
+                <label class="form-label-dark">Étudiant *</label>
+                <select name="student_id" class="form-control-dark" required>
+                    <option value="" disabled selected>Sélectionner un étudiant</option>
+                    {% for u in students %}
+                    <option value="{{ u.id }}">{{ u.username }}{% if u.first_name %} — {{ u.first_name }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label class="form-label-dark">Note (0 – 20) *</label>
+                <div style="position:relative;">
+                    <input type="number" name="grade" class="form-control-dark" min="0" max="20" step="0.5" placeholder="ex: 14.5" required style="padding-right:3rem;">
+                    <span style="position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.8rem;font-weight:600;">/20</span>
+                </div>
+            </div>
+            <button type="submit" class="btn-accent" style="width:100%;justify-content:center;">
+                <i class="bi bi-check-circle"></i> Enregistrer
+            </button>
+        </form>
+    </div>
+
+    <!-- Grades list -->
+    <div class="card-dark">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="section-title" style="margin-bottom:0;flex:1;">
+                <i class="bi bi-bar-chart" style="color:var(--success);"></i> Notes enregistrées
+            </div>
+            {% if grades %}
+            <span style="color:var(--text-muted);font-size:0.78rem;">
+                Moy. : <strong style="color:var(--success);">
+                    {{ "%.1f"|format(grades|map(attribute='grade')|map('float')|sum / grades|length) }}/20
+                </strong>
+            </span>
+            {% endif %}
+        </div>
+
+        {% if grades %}
+        <table class="table-dark-custom">
+            <thead>
+                <tr>
+                    <th>Étudiant</th>
+                    <th>Note</th>
+                    <th>Mention</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for g in grades %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                        <div class="avatar" style="width:28px;height:28px;font-size:0.72rem;border-radius:7px;">{{ g.username[0].upper() }}</div>
+                        <span style="font-weight:600;">{{ g.username }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;
+                        color:{% if g.grade >= 16 %}var(--success){% elif g.grade >= 10 %}var(--text-primary){% else %}var(--danger){% endif %};">
+                        {{ g.grade }}
+                    </span>
+                    <span style="color:var(--text-muted);font-size:0.78rem;">/20</span>
+                </td>
+                <td>
+                    {% if g.grade >= 16 %}
+                        <span class="badge-role" style="background:rgba(34,211,165,0.12);color:var(--success);border:1px solid rgba(34,211,165,0.25);">Très bien</span>
+                    {% elif g.grade >= 14 %}
+                        <span class="badge-role" style="background:rgba(108,99,255,0.12);color:var(--accent);border:1px solid var(--border-accent);">Bien</span>
+                    {% elif g.grade >= 12 %}
+                        <span class="badge-role" style="background:rgba(245,158,11,0.12);color:var(--warning);border:1px solid rgba(245,158,11,0.25);">Assez bien</span>
+                    {% elif g.grade >= 10 %}
+                        <span class="badge-role" style="background:rgba(255,255,255,0.05);color:var(--text-secondary);border:1px solid var(--border);">Passable</span>
+                    {% else %}
+                        <span class="badge-role" style="background:rgba(255,95,126,0.1);color:var(--danger);border:1px solid rgba(255,95,126,0.2);">Insuffisant</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-clipboard-x"></i>
+            <p>Aucune note enregistrée pour cette évaluation.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

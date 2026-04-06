@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Connexion — DZSchool{% endblock %}
+
+{% block auth_content %}
+<div class="auth-layout">
+    <div style="width:100%;max-width:420px;padding:1.5rem;position:relative;z-index:1;">
+
+        <!-- Logo -->
+        <div style="text-align:center;margin-bottom:2.5rem;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:var(--accent);border-radius:14px;font-size:1.5rem;box-shadow:0 0 30px var(--accent-glow);margin-bottom:1rem;">🎓</div>
+            <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.5px;">DZ<span style="color:var(--accent);">School</span></h1>
+            <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">Plateforme académique</p>
+        </div>
+
+        <!-- Card -->
+        <div class="card-dark" style="padding:2rem;">
+            <h2 style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:0.25rem;">Bon retour 👋</h2>
+            <p style="color:var(--text-muted);font-size:0.83rem;margin-bottom:1.75rem;">Connectez-vous à votre espace</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for cat, msg in messages %}
+                <div class="alert-dark alert-{{ 'success' if cat == 'success' else 'danger' }}" style="margin-bottom:1.25rem;">
+                    <i class="bi bi-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i> {{ msg }}
+                </div>
+                {% endfor %}
+            {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div style="margin-bottom:1.1rem;">
+                    <label class="form-label-dark">Nom d'utilisateur</label>
+                    <div style="position:relative;">
+                        <i class="bi bi-person" style="position:absolute;left:0.8rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.9rem;"></i>
+                        <input type="text" name="username" class="form-control-dark" placeholder="Entrez votre identifiant" style="padding-left:2.2rem;" required autofocus>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1.5rem;">
+                    <label class="form-label-dark">Mot de passe</label>
+                    <div style="position:relative;">
+                        <i class="bi bi-lock" style="position:absolute;left:0.8rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.9rem;"></i>
+                        <input type="password" name="password" id="pwdInput" class="form-control-dark" placeholder="••••••••" style="padding-left:2.2rem;padding-right:2.5rem;" required>
+                        <button type="button" onclick="togglePwd()" style="position:absolute;right:0.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0;">
+                            <i class="bi bi-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-accent" style="width:100%;justify-content:center;padding:0.65rem;">
+                    <i class="bi bi-arrow-right-circle"></i> Se connecter
+                </button>
+            </form>
+        </div>
+
+        <p style="text-align:center;color:var(--text-muted);font-size:0.75rem;margin-top:1.5rem;">
+            © 2026 DZSchool — Plateforme sécurisée
+        </p>
+    </div>
+</div>
+
+<style>
+.form-control-dark { animation: fadeUp 0.4s ease both; }
+.form-control-dark:nth-child(2) { animation-delay: 0.1s; }
+.card-dark { animation: fadeUp 0.5s ease both; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function togglePwd() {
+    const input = document.getElementById('pwdInput');
+    const icon = document.getElementById('eyeIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+</script>
+{% endblock %}
