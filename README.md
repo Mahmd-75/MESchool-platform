@@ -117,4 +117,5 @@ La pipeline se déclenche automatiquement à chaque push sur `main` :
 - Mahmoud EL SHETEWI
 - Rayan LABED
 - Yoann GIRAULT
+
 Projet réalisé en groupe dans le cadre de l'UE7-2 DevSecOps — Guardia Cybersecurity School GCS2 2025-2026.
