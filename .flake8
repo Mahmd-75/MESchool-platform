@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 130
+exclude = __pycache__, .git, .env
+ignore = W291, W292, W293, E302, E303, W503
+per-file-ignores =
+    app/__init__.py: E501

@@ -309,7 +309,7 @@ def create_schedule():
     def fmt_time(t):
         if isinstance(t, datetime.timedelta):
             total = int(t.total_seconds())
-            return f"{total//3600:02d}:{(total%3600)//60:02d}"
+            return f"{total//3600:02d}:{(total % 3600)//60:02d}"
         return str(t)[:5]
 
     schedules = []

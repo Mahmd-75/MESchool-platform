@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from .models import get_user_by_username
-from .utils import sanitize_string, validate_username, validate_password
+from .utils import sanitize_string, validate_username
 import bcrypt
 import logging
 
