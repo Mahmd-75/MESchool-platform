@@ -43,10 +43,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Créer le fichier .env pour CI
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > .env
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "MYSQL_DB=${{ secrets.MYSQL_DB }}" >> .env
+          echo "MYSQL_HOST=db" >> .env
+          echo "MYSQL_USER=root" >> .env
+          echo "FLASK_DEBUG=false" >> .env
+          echo "PORT=5000" >> .env
+
       - name: Démarrer l'application avec Docker Compose
         run: |
           docker compose up -d --build
-          sleep 20
+          sleep 30
 
       - name: Attendre que Flask soit prêt
         run: |
@@ -56,13 +66,14 @@ jobs:
             sleep 5
           done
 
-      - name: Lancer OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: 'http://localhost:5000'
-          fail_action: false
-          allow_issue_writing: false
-          cmd_options: '-I'
+      - name: Lancer OWASP ZAP via Docker
+        run: |
+          docker run --rm --network host \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://localhost:5000 \
+            -I \
+            -r zap-report.html || true
 
       - name: Arrêter les containers
         if: always()
