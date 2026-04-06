@@ -1,0 +1,79 @@
+name: CI/CD Pipeline - Academic Platform
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  flake8:
+    name: Lint Python (Flake8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Installer les dépendances
+        run: |
+          pip install flake8
+      - name: Lancer Flake8
+        run: |
+          flake8 app/ run.py --max-line-length=120 --exclude=__pycache__ --statistics
+
+  pip-audit:
+    name: Scan dépendances (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Installer pip-audit
+        run: pip install pip-audit
+      - name: Lancer pip-audit
+        run: pip-audit -r requirements.txt
+
+  owasp-zap:
+    name: Scan DAST (OWASP ZAP)
+    runs-on: ubuntu-latest
+    needs: [flake8, pip-audit]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Démarrer l'application avec Docker Compose
+        run: |
+          docker compose up -d --build
+          sleep 20
+
+      - name: Attendre que Flask soit prêt
+        run: |
+          for i in {1..15}; do
+            curl -s http://localhost:5000/auth/login && break
+            echo "Attente Flask... ($i)"
+            sleep 5
+          done
+
+      - name: Lancer OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:5000'
+          fail_action: false
+          allow_issue_writing: false
+
+      - name: Arrêter les containers
+        if: always()
+        run: docker compose down
+
+  docker-build:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    needs: [flake8, pip-audit]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build image Docker
+        run: docker build -t academic-platform:latest .
