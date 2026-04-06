@@ -18,11 +18,9 @@ jobs:
         with:
           python-version: '3.13'
       - name: Installer les dépendances
-        run: |
-          pip install flake8
+        run: pip install flake8
       - name: Lancer Flake8
-        run: |
-          flake8 app/ run.py --max-line-length=120 --exclude=__pycache__ --statistics
+        run: flake8 app/ run.py --max-line-length=120 --exclude=__pycache__ --statistics
 
   pip-audit:
     name: Scan dépendances (pip-audit)
@@ -58,7 +56,7 @@ jobs:
             sleep 5
           done
 
-         - name: Lancer OWASP ZAP Baseline Scan
+      - name: Lancer OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:5000'
