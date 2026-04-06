@@ -62,7 +62,7 @@ jobs:
           target: 'http://localhost:5000'
           fail_action: false
           allow_issue_writing: false
-          artifact_name: 'zap-scan-results'
+          cmd_options: '-I'
 
       - name: Arrêter les containers
         if: always()
