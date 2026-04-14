@@ -1,6 +1,6 @@
 # MESchool — Plateforme de Gestion Académique Sécurisée
 
-> Projet DevSecOps — GCS2 UE7-2 | Guardia Cybersecurity School 2025-2026
+> Projet DevSecOps | Guardia Cybersecurity School 2025-2026
 
 ## Présentation
 
@@ -112,10 +112,4 @@ La pipeline se déclenche automatiquement à chaque push sur `main` :
 | Scan dépendances | pip-audit | Détection de vulnérabilités CVE |
 | Scan dynamique | OWASP ZAP | Test d'intrusion automatisé |
 | Build | Docker | Construction de l'image |
-
-## Équipe
-- Mahmoud EL SHETEWI
-- Rayan LABED
-- Yoann GIRAULT
-
-Projet réalisé en groupe dans le cadre de l'UE7-2 DevSecOps — Guardia Cybersecurity School GCS2 2025-2026.
+adre de l'UE7-2 DevSecOps — Guardia Cybersecurity School GCS2 2025-2026.
