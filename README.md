@@ -112,4 +112,3 @@ La pipeline se déclenche automatiquement à chaque push sur `main` :
 | Scan dépendances | pip-audit | Détection de vulnérabilités CVE |
 | Scan dynamique | OWASP ZAP | Test d'intrusion automatisé |
 | Build | Docker | Construction de l'image |
-adre de l'UE7-2 DevSecOps — Guardia Cybersecurity School GCS2 2025-2026.
