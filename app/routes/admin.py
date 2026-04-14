@@ -49,13 +49,17 @@ def list_users():
                 flash(msg, "danger")
             else:
                 hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12))
-                cursor.execute(
-                    "INSERT INTO users (username, first_name, last_name, password, role) "
-                    "VALUES (%s, %s, %s, %s, %s)",
-                    (username, first_name, last_name, hashed.decode("utf-8"), role)
-                )
-                conn.commit()
-                flash(f"Compte '{username}' créé avec succès.", "success")
+                try:
+                    cursor.execute(
+                        "INSERT INTO users (username, first_name, last_name, password, role) "
+                        "VALUES (%s, %s, %s, %s, %s)",
+                        (username, first_name, last_name, hashed.decode("utf-8"), role)
+                    )
+                    conn.commit()
+                    flash(f"Compte '{username}' créé avec succès.", "success")
+                except Exception:
+                    conn.rollback()
+                    flash(f"Le nom d'utilisateur '{username}' est déjà pris.", "danger")
 
     cursor.execute("SELECT id, username, first_name, last_name, role FROM users")
     users = cursor.fetchall()

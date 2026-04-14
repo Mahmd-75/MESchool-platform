@@ -1,10 +1,10 @@
-# DZSchool — Plateforme de Gestion Académique Sécurisée
+# MESchool — Plateforme de Gestion Académique Sécurisée
 
 > Projet DevSecOps — GCS2 UE7-2 | Guardia Cybersecurity School 2025-2026
 
 ## Présentation
 
-DZSchool est une application web de gestion académique développée dans le cadre du module DevSecOps. Elle permet la gestion des notes, des classes et des emplois du temps avec un système de contrôle d'accès basé sur les rôles (RBAC).
+MESchool est une application web de gestion académique développée dans le cadre du module DevSecOps. Elle permet la gestion des notes, des classes et des emplois du temps avec un système de contrôle d'accès basé sur les rôles (RBAC).
 
 ## Stack Technique
 
