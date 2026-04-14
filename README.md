@@ -143,7 +143,3 @@ docker compose up --build
 | etudiant1 | password123 | Étudiant |
 
 ---
-
-
-
-Projet réalisé en groupe dans le cadre de l'UE7-2 DevSecOps — Guardia Cybersecurity School GCS2 2025-2026.
